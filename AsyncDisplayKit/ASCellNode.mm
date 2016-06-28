@@ -31,6 +31,11 @@
   ASDisplayNodeDidLoadBlock _viewControllerDidLoadBlock;
   ASDisplayNode *_viewControllerNode;
   UIViewController *_viewController;
+
+  // Cells cannot change size of their own accord – their containing view must
+  // resize them. This is the layout that will be applied when the containing view
+  // calls `didApplyCellSizeChange`
+  ASLayout *_pendingLayout;
 }
 
 @end
@@ -65,6 +70,7 @@
 {
   [super didLoad];
 
+  _view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   if (_viewControllerBlock != nil) {
 
     _viewController = _viewControllerBlock();
@@ -125,13 +131,15 @@
 
 - (void)__setNeedsLayout
 {
-  CGSize oldSize = self.calculatedSize;
-  [super __setNeedsLayout];
-  
-  //Adding this lock because lock used to be held when this method was called. Not sure if it's necessary for
-  //didRelayoutFromOldSize:toNewSize:
   ASDN::MutexLocker l(_propertyLock);
-  [self didRelayoutFromOldSize:oldSize toNewSize:self.calculatedSize];
+  ASLayout *oldLayout = _layout;
+  [self invalidateCalculatedLayout];
+  ASLayout *newLayout = [self measureWithSizeRange:oldLayout.constrainedSizeRange];
+  
+  // TODO: Only do this if size changed.
+  _layout = oldLayout;
+  _pendingLayout = newLayout;
+  [self didRelayoutFromOldSize:oldLayout.size toNewSize:newLayout.size];
 }
 
 - (void)transitionLayoutWithAnimation:(BOOL)animated
@@ -166,6 +174,15 @@
                    }
                  }
    ];
+}
+
+- (void)didApplyCellSizeChange
+{
+  ASDN::MutexLocker l(_propertyLock);
+  if (_pendingLayout != nil) {
+    _layout = _pendingLayout;
+    _pendingLayout = nil;
+  }
 }
 
 - (void)didRelayoutFromOldSize:(CGSize)oldSize toNewSize:(CGSize)newSize

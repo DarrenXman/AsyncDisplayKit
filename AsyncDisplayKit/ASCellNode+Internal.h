@@ -41,4 +41,10 @@
  */
 @property (nonatomic, weak) UIScrollView *scrollView;
 
+/*
+ * Called when UICollectionView/UITableView has submitted a size change request.
+ * The cell node can now apply its pending layout.
+ */
+- (void)didApplyCellSizeChange;
+
 @end

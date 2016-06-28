@@ -1181,6 +1181,10 @@ static NSString * const kCellReuseIdentifier = @"_ASTableViewCell";
   _queuedNodeHeightUpdate = NO;
 
   [super beginUpdates];
+  // TODO: Only inform the nodes that reported a size change.
+  for (ASCellNode *node in [_dataController completedNodes]) {
+    [node didApplyCellSizeChange];
+  }
   [super endUpdates];
 }
 

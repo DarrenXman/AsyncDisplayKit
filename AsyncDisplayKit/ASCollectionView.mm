@@ -1196,7 +1196,9 @@ static const NSTimeInterval kASCollectionViewAnimationDuration = 0.3;
     // never good, so we intentionally don't do it.
     
     [self.collectionViewLayout invalidateLayoutWithContext:inval];
-    
+    for (ASCellNode *node in nodes) {
+      [node didApplyCellSizeChange];
+    }
     if (_queuedNodeSizeInvalidationContext.shouldAnimate) {
       [UIView animateWithDuration:kASCollectionViewAnimationDuration animations:^{
           [self layoutIfNeeded];
