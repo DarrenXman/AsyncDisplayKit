@@ -134,9 +134,9 @@
   ASDN::MutexLocker l(_propertyLock);
 //  TODO: This is from [ASDisplayNode __setNeedsLayout]. Without it, we get crashes.
 //  With it, we don't always get relayouts when we ask for them.
-//  if (_layout == nil || _layout.isDirty) {
-//    return;
-//  }
+  if (_layout == nil || _layout.isDirty) {
+    return;
+  }
   ASLayout *oldLayout = _layout;
   [self invalidateCalculatedLayout];
   ASLayout *newLayout = [self measureWithSizeRange:oldLayout.constrainedSizeRange];
