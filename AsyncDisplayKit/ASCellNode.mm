@@ -132,13 +132,19 @@
 - (void)__setNeedsLayout
 {
   ASDN::MutexLocker l(_propertyLock);
+//  TODO: This is from [ASDisplayNode __setNeedsLayout]. Without it, we get crashes.
+//  With it, we don't always get relayouts when we ask for them.
+//  if (_layout == nil || _layout.isDirty) {
+//    return;
+//  }
   ASLayout *oldLayout = _layout;
   [self invalidateCalculatedLayout];
   ASLayout *newLayout = [self measureWithSizeRange:oldLayout.constrainedSizeRange];
   
-  // TODO: Only do this if size changed.
-  _layout = oldLayout;
-  _pendingLayout = newLayout;
+  if (!CGSizeEqualToSize(oldLayout.size, newLayout.size)) {
+    _layout = oldLayout;
+    _pendingLayout = newLayout;
+  }
   [self didRelayoutFromOldSize:oldLayout.size toNewSize:newLayout.size];
 }
 
