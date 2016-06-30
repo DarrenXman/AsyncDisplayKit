@@ -33,7 +33,7 @@
 {
   ASDisplayNodeAssertMainThread();
   if (_changeSetBatchUpdateCounter == 0) {
-    _changeSet = [[_ASHierarchyChangeSet alloc] initWithOldData:[self _itemCountsFromDataSource]];
+    _changeSet = [[_ASHierarchyChangeSet alloc] initWithOldData:self.itemCountsFromDataSource];
   }
   _changeSetBatchUpdateCounter++;
 }
@@ -44,12 +44,10 @@
   _changeSetBatchUpdateCounter--;
   
   if (_changeSetBatchUpdateCounter == 0) {
-    [_changeSet markCompletedWithNewItemCounts:[self _itemCountsFromDataSource]];
+    [self invalidateDataSourceItemCounts];
+    [_changeSet markCompletedWithNewItemCounts:self.itemCountsFromDataSource];
     
     [super beginUpdates];
-
-    NSAssert([_changeSet itemChangesOfType:_ASHierarchyChangeTypeReload].count == 0, @"Expected reload item changes to have been converted into insert/deletes.");
-    NSAssert([_changeSet sectionChangesOfType:_ASHierarchyChangeTypeReload].count == 0, @"Expected reload section changes to have been converted into insert/deletes.");
     
     for (_ASHierarchyItemChange *change in [_changeSet itemChangesOfType:_ASHierarchyChangeTypeDelete]) {
       [super deleteRowsAtIndexPaths:change.indexPaths withAnimationOptions:change.animationOptions];
@@ -171,17 +169,6 @@
   } else {
     [super moveRowAtIndexPath:indexPath toIndexPath:newIndexPath withAnimationOptions:animationOptions];
   }
-}
-
-- (NSArray <NSNumber *> *)_itemCountsFromDataSource
-{
-  id<ASDataControllerSource> source = self.dataSource;
-  NSInteger sectionCount = [source numberOfSectionsInDataController:self];
-  NSMutableArray<NSNumber *> *result = [NSMutableArray arrayWithCapacity:sectionCount];
-  for (NSInteger i = 0; i < sectionCount; i++) {
-    [result addObject:@([source dataController:self rowsInSection:i])];
-  }
-  return result;
 }
 
 @end
